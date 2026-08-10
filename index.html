@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Oliver Huang — 个人作品集，专注于信息资源管理与 AI 技术">
+    <title>Oliver Huang</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="addr-bar" id="addr-bar">
+        <span class="addr-icon">▚</span>
+        <div class="addr-track">
+            <div class="addr-fill" id="addr-fill"></div>
+            <span class="addr-path" id="addr-path">C:\Graduate-Portfolio\home</span>
+        </div>
+        <span class="addr-pct" id="addr-pct">0%</span>
+    </div>
+
+    <canvas id="starfield"></canvas>
+
+    <div class="welcome-screen" id="welcome-screen">
+        <span class="welcome-text">Welcome to OH's Graduate Portfolio</span>
+    </div>
+
+    <div class="hero-wrapper" id="hero-wrapper">
+        <div class="hero-name" id="hero-name">Oliver Huang</div>
+        <div class="hero-sub" id="hero-sub">
+            M.S. in Library &amp; Information Studies<br>
+            Focus on Information Resource Management &amp; AI Technology
+        </div>
+        <div class="scroll-hint" id="scroll-hint">
+            <span class="scroll-hint-text">SCROLL</span>
+            <span class="scroll-hint-arrow"></span>
+        </div>
+    </div>
+
+    <section class="skills-page" id="skills-page">
+        <h2 class="skills-title" data-reveal="typewriter">&gt; Skills Stack</h2>
+        <div class="pixel-sphere-stage" data-reveal="scan">
+            <canvas id="pixel-sphere"></canvas>
+        </div>
+    </section>
+
+    <section class="experience-page" id="experience-page">
+        <h2 class="experience-title" data-reveal="typewriter">&gt; Professional Experience</h2>
+        <div class="timeline">
+            <div class="timeline-line" id="timeline-line"></div>
+
+            <div class="timeline-item left" data-reveal="scan">
+                <div class="timeline-card">
+                    <span class="timeline-date">2023.09 - 2023.12</span>
+                    <h3 class="timeline-role">Competition Title</h3>
+                    <span class="timeline-org">Organization Name</span>
+                    <p class="timeline-desc">Description placeholder for the first competition.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item right" data-reveal="scan">
+                <div class="timeline-card">
+                    <span class="timeline-date">2024.01 - 2024.03</span>
+                    <h3 class="timeline-role">Competition Title</h3>
+                    <span class="timeline-org">Organization Name</span>
+                    <p class="timeline-desc">Description placeholder for the second competition.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item left" data-reveal="scan">
+                <div class="timeline-card">
+                    <span class="timeline-date">2024.04 - 2024.06</span>
+                    <h3 class="timeline-role">Internship Position</h3>
+                    <span class="timeline-org">Company Name</span>
+                    <p class="timeline-desc">Description placeholder for the first internship.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item right" data-reveal="scan">
+                <div class="timeline-card">
+                    <span class="timeline-date">2024.07 - 2024.09</span>
+                    <h3 class="timeline-role">Competition Title</h3>
+                    <span class="timeline-org">Organization Name</span>
+                    <p class="timeline-desc">Description placeholder for the third competition.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item left" data-reveal="scan">
+                <div class="timeline-card">
+                    <span class="timeline-date">2024.10 - 2024.12</span>
+                    <h3 class="timeline-role">Competition Title</h3>
+                    <span class="timeline-org">Organization Name</span>
+                    <p class="timeline-desc">Description placeholder for the fourth competition.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item right" data-reveal="scan">
+                <div class="timeline-card">
+                    <span class="timeline-date">2025.01 - 2025.03</span>
+                    <h3 class="timeline-role">Competition Title</h3>
+                    <span class="timeline-org">Organization Name</span>
+                    <p class="timeline-desc">Description placeholder for the fifth competition.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item left" data-reveal="scan">
+                <div class="timeline-card">
+                    <span class="timeline-date">2025.04 - 2025.06</span>
+                    <h3 class="timeline-role">Internship Position</h3>
+                    <span class="timeline-org">Company Name</span>
+                    <p class="timeline-desc">Description placeholder for the second internship.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="dos-terminal" id="win-window">
+        <div class="terminal" id="terminal"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,640 @@
+/* ============================================================
+   Oliver Huang · CRT Phosphor Terminal
+   ============================================================ */
+
+html.no-scroll,
+html.no-scroll body {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+}
+
+:root {
+    --crt-green:  #ffff00;
+    --crt-green-dim: #b3a300;
+    --crt-bg:     #0d0d1a;
+    --pixel: 'Press Start 2P', monospace;
+    --mono: 'VT323', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--pixel);
+    background: var(--crt-bg);
+    color: #C0C0C0;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ============== Welcome Screen ============== */
+.welcome-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--crt-bg);
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+}
+
+.welcome-screen.show {
+    opacity: 1;
+}
+
+.welcome-screen.fade-out {
+    opacity: 0;
+}
+
+.welcome-text {
+    font-family: var(--pixel);
+    font-size: clamp(16px, 3vw, 32px);
+    color: #ffff00;
+    letter-spacing: 0.1em;
+    text-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5), 3px 3px 0 #ffffff;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+}
+
+.welcome-screen.show .welcome-text {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ============== Address Bar / Progress ============== */
+.addr-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    background: transparent;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+}
+
+.addr-bar.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.addr-icon {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--crt-green);
+    line-height: 1;
+}
+
+.addr-track {
+    position: relative;
+    flex: 1;
+    height: 10px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+}
+
+.addr-fill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    transform: translateY(-50%);
+    background: repeating-linear-gradient(
+        -45deg,
+        var(--crt-green),
+        var(--crt-green) 4px,
+        #cca800 4px,
+        #cca800 8px
+    );
+    transition: width 0.05s linear;
+}
+
+.addr-path,
+.addr-pct {
+    position: relative;
+    z-index: 2;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+}
+
+.addr-path {
+    color: #ffffff;
+    padding: 2px 10px 2px 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.addr-pct {
+    color: var(--crt-green);
+    min-width: 40px;
+    text-align: right;
+    padding: 2px 8px 2px 5px;
+}
+
+.addr-path::before,
+.addr-pct::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -3px; right: 0; bottom: 0;
+    background: var(--crt-bg);
+    border: 1px solid rgba(255, 255, 0, 0.6);
+    border-radius: 0 10px 10px 0;
+    z-index: -1;
+}
+
+/* ============== Starfield Canvas ============== */
+#starfield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 1s ease;
+    pointer-events: none;
+}
+
+#starfield.active {
+    opacity: 1;
+}
+
+/* ============== Hero Name ============== */
+.hero-wrapper {
+    position: relative;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    pointer-events: none;
+}
+
+.hero-name {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--pixel);
+    font-size: clamp(28px, 6vw, 72px);
+    color: var(--crt-green);
+    text-shadow:
+        4px 4px 0 #8b6914,
+        5px 5px 0 rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    letter-spacing: 0.08em;
+}
+
+.hero-name.visible {
+    opacity: 1;
+}
+
+.hero-sub {
+    position: absolute;
+    top: calc(35% + 90px);
+    left: 50%;
+    transform: translate(-50%, 0);
+    font-family: var(--mono);
+    font-size: clamp(17px, 2.4vw, 24px);
+    color: #ffffff;
+    text-align: right;
+    line-height: 1.7;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+}
+
+.hero-sub.visible {
+    opacity: 1;
+}
+
+/* ============== CRT Terminal ============== */
+.dos-terminal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: none;
+    z-index: 10;
+    width: 100vw;
+    height: 100vh;
+    background: var(--crt-bg);
+    padding: 32px 36px;
+    display: flex;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+.dos-terminal.crt-off {
+    animation: crtOff 0.6s ease-in forwards;
+    transform-origin: center center;
+    pointer-events: none;
+}
+
+@keyframes crtOff {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+        background-color: var(--crt-bg);
+    }
+    6% {
+        background-color: #ffffff;
+        filter: brightness(2);
+    }
+    14% {
+        background-color: var(--crt-bg);
+        filter: brightness(1);
+    }
+    55% {
+        transform: scaleY(0.005);
+        opacity: 1;
+        background-color: #ffffff;
+    }
+    80% {
+        transform: scaleY(0.005) scaleX(0.01);
+        opacity: 0.5;
+        background-color: #ffffff;
+    }
+    100% {
+        transform: scaleY(0) scaleX(0);
+        opacity: 0;
+    }
+}
+
+/* scanlines */
+.dos-terminal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0, 0, 0, 0.06) 3px,
+        rgba(0, 0, 0, 0.06) 4px
+    );
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* vignette */
+.dos-terminal::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 75%, rgba(0,0,0,0.2) 100%);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* ============== Terminal ============== */
+.terminal {
+    position: relative;
+    z-index: 1;
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    color: var(--crt-green);
+    line-height: 1.6;
+    user-select: none;
+}
+
+.terminal-line {
+    white-space: pre;
+    opacity: 0;
+    animation: lineIn 0.1s steps(2) forwards;
+}
+
+@keyframes lineIn {
+    to { opacity: 1; }
+}
+
+.terminal-line .ok {
+    color: #00ff66;
+}
+
+.terminal-line .syn-string {
+    color: #ff8800;
+}
+
+.terminal-line .syn-comment {
+    color: #00cc44;
+}
+
+.terminal-line .syn-func {
+    color: var(--crt-green);
+}
+
+.terminal-line .syn-punct {
+    color: #ffffff;
+}
+
+.terminal-line .syn-path {
+    color: #ff8800;
+}
+
+.terminal-line .syn-cmd {
+    color: #00aaff;
+}
+
+.terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--crt-green);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 0.6s steps(2) infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* ============== Scroll Hint ============== */
+.scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+}
+
+.scroll-hint-text {
+    font-family: var(--pixel);
+    font-size: 0.7rem;
+    color: var(--crt-green);
+    letter-spacing: 0.2em;
+}
+
+.scroll-hint-arrow {
+    width: 14px;
+    height: 14px;
+    border-right: 2px solid var(--crt-green);
+    border-bottom: 2px solid var(--crt-green);
+    transform: rotate(45deg);
+    animation: scrollBounce 1.4s ease-in-out infinite;
+}
+
+@keyframes scrollBounce {
+    0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 1; }
+    50% { transform: rotate(45deg) translate(4px, 4px); opacity: 0.4; }
+}
+
+/* ============== Skills Page (Pixel Sphere) ============== */
+.skills-page {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-height: 100vh;
+    padding: 100px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.skills-title {
+    font-family: var(--pixel);
+    font-size: clamp(16px, 3vw, 32px);
+    color: #ffff00;
+    text-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5), 3px 3px 0 #ffffff;
+    letter-spacing: 0.1em;
+    margin-bottom: 40px;
+}
+
+.pixel-sphere-stage {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#pixel-sphere {
+    width: 100%;
+    height: 600px;
+    cursor: grab;
+}
+
+#pixel-sphere:active {
+    cursor: grabbing;
+}
+
+/* ============== Experience / Timeline ============== */
+.experience-page {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-height: 100vh;
+    padding: 100px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.experience-title {
+    font-family: var(--pixel);
+    font-size: clamp(16px, 3vw, 32px);
+    color: #ffff00;
+    text-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5), 3px 3px 0 #ffffff;
+    letter-spacing: 0.1em;
+    margin-bottom: 60px;
+}
+
+.timeline {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: #ffffff;
+    z-index: 1;
+}
+
+.timeline-item {
+    position: relative;
+    width: 50%;
+}
+
+.timeline-item.left {
+    align-self: flex-start;
+    padding-right: 40px;
+    text-align: right;
+}
+
+.timeline-item.right {
+    align-self: flex-end;
+    padding-left: 40px;
+    text-align: left;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    width: 12px;
+    height: 12px;
+    background: #ffff00;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.timeline-item.left::before {
+    right: -6px;
+    transform: translateX(50%);
+}
+
+.timeline-item.right::before {
+    left: -6px;
+    transform: translateX(-50%);
+}
+
+.timeline-card {
+    background: var(--crt-bg);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 16px 20px;
+    position: relative;
+}
+
+.timeline-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #ffffff;
+}
+
+.timeline-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #ffffff;
+}
+
+.timeline-date {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: #ffff00;
+    letter-spacing: 0.05em;
+}
+
+.timeline-role {
+    font-family: var(--pixel);
+    font-size: clamp(10px, 1.5vw, 14px);
+    color: #ffffff;
+    margin: 8px 0 4px;
+    line-height: 1.4;
+}
+
+.timeline-org {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.timeline-desc {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+/* ============== Arcade Reveal ============== */
+[data-reveal="scan"] {
+    clip-path: inset(0 0 100% 0);
+}
+
+[data-reveal="scan"].visible {
+    animation: scanReveal 0.6s steps(16) forwards;
+}
+
+[data-reveal="typewriter"] {
+    opacity: 0;
+}
+
+[data-reveal="typewriter"].visible {
+    opacity: 1;
+}
+
+[data-reveal="typewriter"].typing::after {
+    content: '█';
+    color: #ffff00;
+    animation: blink 0.6s steps(2) infinite;
+}
+
+@keyframes scanReveal {
+    from {
+        clip-path: inset(0 0 100% 0);
+    }
+    to {
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+/* ============== Comet Cursor ============== */
+.comet-particle {
+    position: fixed;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    z-index: 9999;
+    font-family: var(--mono);
+    color: #ffffff;
+    will-change: transform, opacity;
+}
+
+/* ============== Responsive ============== */
+@media (max-width: 768px) {
+    .dos-terminal {
+        min-height: 400px;
+    }
+
+    .terminal {
+        font-size: 0.95rem;
+    }
+}
