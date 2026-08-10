@@ -125,7 +125,7 @@
     setTimeout(typeNext, 300);
 
     /* ================================================================
-       After Typing: CRT Off → Starfield → START Button
+       After Typing: Pixel Off → Starfield → START Button
        ================================================================ */
     var typingDone = false;
 
@@ -143,7 +143,7 @@
 
         await new Promise(function (resolve) {
             winWindow.addEventListener('animationend', resolve, { once: true });
-            winWindow.classList.add('crt-off');
+            winWindow.classList.add('pixel-off');
         });
 
         winWindow.style.display = 'none';
@@ -179,7 +179,7 @@
        ================================================================ */
     var sphereCanvas = document.getElementById('pixel-sphere');
     var sphereCtx = sphereCanvas ? sphereCanvas.getContext('2d') : null;
-    var crtBg = getComputedStyle(document.documentElement).getPropertyValue('--crt-bg').trim();
+    var pixelBg = getComputedStyle(document.documentElement).getPropertyValue('--pixel-bg').trim();
     var sphereRotY = 0;
     var sphereRotX = -0.3;
     var sphereAutoSpin = true;
@@ -408,7 +408,7 @@
                 sphereCtx.fillRect(bx - ow, by - ow, ow, boxH + ow * 2);
                 sphereCtx.fillRect(bx + boxW, by - ow, ow, boxH + ow * 2);
 
-                sphereCtx.fillStyle = crtBg;
+                sphereCtx.fillStyle = pixelBg;
                 sphereCtx.fillRect(bx, by, boxW, boxH);
                 sphereCtx.fillStyle = pl.color;
                 sphereCtx.fillRect(bx, by, boxW, 2 * drawScale);

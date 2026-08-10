@@ -1,5 +1,5 @@
 /* ============================================================
-   Oliver Huang · CRT Phosphor Terminal
+   Oliver Huang · Retro Pixel Terminal
    ============================================================ */
 
 html.no-scroll,
@@ -10,9 +10,9 @@ html.no-scroll body {
 }
 
 :root {
-    --crt-green:  #ffff00;
-    --crt-green-dim: #b3a300;
-    --crt-bg:     #0d0d1a;
+    --pixel-accent:  #ffff00;
+    --pixel-accent-dim: #b3a300;
+    --pixel-bg:     #0d0d1a;
     --pixel: 'Press Start 2P', monospace;
     --mono: 'VT323', monospace;
 }
@@ -29,7 +29,7 @@ html {
 
 body {
     font-family: var(--pixel);
-    background: var(--crt-bg);
+    background: var(--pixel-bg);
     color: #C0C0C0;
     min-height: 100vh;
     overflow-x: hidden;
@@ -45,7 +45,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--crt-bg);
+    background: var(--pixel-bg);
     z-index: 3;
     opacity: 0;
     pointer-events: none;
@@ -102,7 +102,7 @@ body {
 .addr-icon {
     font-family: var(--mono);
     font-size: 0.85rem;
-    color: var(--crt-green);
+    color: var(--pixel-accent);
     line-height: 1;
 }
 
@@ -124,8 +124,8 @@ body {
     transform: translateY(-50%);
     background: repeating-linear-gradient(
         -45deg,
-        var(--crt-green),
-        var(--crt-green) 4px,
+        var(--pixel-accent),
+        var(--pixel-accent) 4px,
         #cca800 4px,
         #cca800 8px
     );
@@ -149,7 +149,7 @@ body {
 }
 
 .addr-pct {
-    color: var(--crt-green);
+    color: var(--pixel-accent);
     min-width: 40px;
     text-align: right;
     padding: 2px 8px 2px 5px;
@@ -160,7 +160,7 @@ body {
     content: '';
     position: absolute;
     top: 0; left: -3px; right: 0; bottom: 0;
-    background: var(--crt-bg);
+    background: var(--pixel-bg);
     border: 1px solid rgba(255, 255, 0, 0.6);
     border-radius: 0 10px 10px 0;
     z-index: -1;
@@ -201,7 +201,7 @@ body {
     transform: translate(-50%, -50%);
     font-family: var(--pixel);
     font-size: clamp(28px, 6vw, 72px);
-    color: var(--crt-green);
+    color: var(--pixel-accent);
     text-shadow:
         4px 4px 0 #8b6914,
         5px 5px 0 rgba(0, 0, 0, 0.5);
@@ -232,7 +232,7 @@ body {
     opacity: 1;
 }
 
-/* ============== CRT Terminal ============== */
+/* ============== Retro Pixel Terminal ============== */
 .dos-terminal {
     position: fixed;
     top: 0;
@@ -241,31 +241,31 @@ body {
     z-index: 10;
     width: 100vw;
     height: 100vh;
-    background: var(--crt-bg);
+    background: var(--pixel-bg);
     padding: 32px 36px;
     display: flex;
     align-items: flex-start;
     overflow: hidden;
 }
 
-.dos-terminal.crt-off {
-    animation: crtOff 0.6s ease-in forwards;
+.dos-terminal.pixel-off {
+    animation: pixelOff 0.6s ease-in forwards;
     transform-origin: center center;
     pointer-events: none;
 }
 
-@keyframes crtOff {
+@keyframes pixelOff {
     0% {
         transform: scale(1);
         opacity: 1;
-        background-color: var(--crt-bg);
+        background-color: var(--pixel-bg);
     }
     6% {
         background-color: #ffffff;
         filter: brightness(2);
     }
     14% {
-        background-color: var(--crt-bg);
+        background-color: var(--pixel-bg);
         filter: brightness(1);
     }
     55% {
@@ -316,7 +316,7 @@ body {
     z-index: 1;
     font-family: var(--mono);
     font-size: 1.1rem;
-    color: var(--crt-green);
+    color: var(--pixel-accent);
     line-height: 1.6;
     user-select: none;
 }
@@ -344,7 +344,7 @@ body {
 }
 
 .terminal-line .syn-func {
-    color: var(--crt-green);
+    color: var(--pixel-accent);
 }
 
 .terminal-line .syn-punct {
@@ -363,7 +363,7 @@ body {
     display: inline-block;
     width: 8px;
     height: 16px;
-    background: var(--crt-green);
+    background: var(--pixel-accent);
     vertical-align: middle;
     margin-left: 2px;
     animation: blink 0.6s steps(2) infinite;
@@ -392,15 +392,15 @@ body {
 .scroll-hint-text {
     font-family: var(--pixel);
     font-size: 0.7rem;
-    color: var(--crt-green);
+    color: var(--pixel-accent);
     letter-spacing: 0.2em;
 }
 
 .scroll-hint-arrow {
     width: 14px;
     height: 14px;
-    border-right: 2px solid var(--crt-green);
-    border-bottom: 2px solid var(--crt-green);
+    border-right: 2px solid var(--pixel-accent);
+    border-bottom: 2px solid var(--pixel-accent);
     transform: rotate(45deg);
     animation: scrollBounce 1.4s ease-in-out infinite;
 }
@@ -529,7 +529,7 @@ body {
 }
 
 .timeline-card {
-    background: var(--crt-bg);
+    background: var(--pixel-bg);
     border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 16px 20px;
     position: relative;
