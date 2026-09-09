@@ -15,6 +15,7 @@ html.no-scroll body {
     --pixel-bg:     #0d0d1a;
     --pixel: 'Press Start 2P', monospace;
     --mono: 'VT323', monospace;
+    --card: 'Fusion Pixel 12px Proportional SC', 'Press Start 2P', monospace;
 }
 
 * {
@@ -498,7 +499,7 @@ body {
 .timeline-item.left {
     align-self: flex-start;
     padding-right: 40px;
-    text-align: right;
+    text-align: left;
 }
 
 .timeline-item.right {
@@ -531,8 +532,9 @@ body {
 .timeline-card {
     background: var(--pixel-bg);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 16px 20px;
+    padding: 20px 24px;
     position: relative;
+    text-align: left;
 }
 
 .timeline-card::before {
@@ -556,32 +558,39 @@ body {
 }
 
 .timeline-date {
-    font-family: var(--mono);
-    font-size: 0.85rem;
+    font-family: var(--card);
+    font-size: 0.8rem;
     color: #ffff00;
     letter-spacing: 0.05em;
-}
-
-.timeline-role {
-    font-family: var(--pixel);
-    font-size: clamp(10px, 1.5vw, 14px);
-    color: #ffffff;
-    margin: 8px 0 4px;
-    line-height: 1.4;
+    display: block;
+    text-align: right;
+    margin-bottom: 12px;
 }
 
 .timeline-org {
-    font-family: var(--mono);
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--card);
+    font-size: clamp(12px, 1.6vw, 16px);
+    color: #ffff00;
+    margin-bottom: 6px;
+    line-height: 1.5;
+    letter-spacing: 0.03em;
+}
+
+.timeline-role {
+    font-family: var(--card);
+    font-size: 0.8rem;
+    color: #ffffff;
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
 }
 
 .timeline-desc {
-    font-family: var(--mono);
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.75);
-    line-height: 1.5;
+    font-family: var(--card);
+    font-size: 0.8rem;
+    color: #ffffff;
+    line-height: 1.7;
     margin-top: 8px;
+    letter-spacing: 0.03em;
 }
 
 /* ============== Arcade Reveal ============== */
