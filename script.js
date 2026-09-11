@@ -880,8 +880,21 @@
         });
     }
 
+    switchLang(currentLang);
+
     function switchLang(lang) {
         document.documentElement.classList.toggle('lang-zh', lang === 'zh');
+
+        for (var t = 0; t < typewriterTimers.length; t++) {
+            var tw = typewriterTimers[t];
+            for (var ti = 0; ti < tw.timers.length; ti++) {
+                clearTimeout(tw.timers[ti]);
+            }
+            tw.el.classList.remove('typing');
+            tw.el.classList.add('typing-done');
+        }
+        typewriterTimers.length = 0;
+
         var els = document.querySelectorAll('.i18n');
         for (var i = 0; i < els.length; i++) {
             var el = els[i];
