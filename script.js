@@ -867,4 +867,37 @@
         }
     }
 
+    var langToggle = document.getElementById('lang-toggle');
+    var currentLang = 'en';
+    if (langToggle) {
+        var langOpts = langToggle.querySelectorAll('.lang-opt');
+        langToggle.addEventListener('click', function () {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            for (var lo = 0; lo < langOpts.length; lo++) {
+                langOpts[lo].classList.toggle('active');
+            }
+            switchLang(currentLang);
+        });
+    }
+
+    function switchLang(lang) {
+        document.documentElement.classList.toggle('lang-zh', lang === 'zh');
+        var els = document.querySelectorAll('.i18n');
+        for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            var text = el.getAttribute('data-' + lang);
+            if (text === null) continue;
+            if (el.hasAttribute('data-reveal') && el.getAttribute('data-reveal') === 'typewriter') {
+                el.setAttribute('data-original-text', text);
+                if (el.classList.contains('typing-done')) {
+                    el.textContent = text;
+                }
+            } else if (el.classList.contains('hero-sub-text')) {
+                el.innerHTML = text;
+            } else {
+                el.textContent = text;
+            }
+        }
+    }
+
 })();

@@ -1,0 +1,10 @@
+# Binary files - ensure Git doesn't corrupt them
+*.wasm binary
+*.pck binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

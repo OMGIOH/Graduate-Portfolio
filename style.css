@@ -233,6 +233,54 @@ body {
     opacity: 1;
 }
 
+html.lang-zh .hero-sub-text {
+    font-family: var(--card);
+}
+
+html.lang-zh .skills-title,
+html.lang-zh .experience-title {
+    font-family: var(--card);
+    text-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5), 1px 1px 0 #ffffff;
+}
+
+html.lang-zh .timeline-subtitle {
+    font-family: var(--card);
+    font-size: 0.975rem;
+}
+
+.lang-toggle {
+    display: block;
+    margin-top: 18px;
+    margin-left: auto;
+    font-family: var(--card);
+    font-size: 0.7rem;
+    color: #ffff00;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    pointer-events: auto;
+    line-height: 1;
+}
+
+.lang-opt {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid #ffff00;
+    color: #ffff00;
+    transition: background 0.2s, color 0.2s;
+}
+
+.lang-opt.active {
+    background: #ffff00;
+    color: #0d0d1a;
+}
+
+.lang-opt:first-child {
+    border-right: none;
+}
+
 /* ============== Retro Pixel Terminal ============== */
 .dos-terminal {
     position: fixed;
@@ -384,31 +432,24 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
     opacity: 0;
     pointer-events: none;
     user-select: none;
 }
 
-.scroll-hint-text {
-    font-family: var(--pixel);
-    font-size: 0.7rem;
-    color: var(--pixel-accent);
-    letter-spacing: 0.2em;
-}
-
 .scroll-hint-arrow {
-    width: 14px;
-    height: 14px;
-    border-right: 2px solid var(--pixel-accent);
-    border-bottom: 2px solid var(--pixel-accent);
+    width: 28px;
+    height: 28px;
+    border-right: 3px solid var(--pixel-accent);
+    border-bottom: 3px solid var(--pixel-accent);
     transform: rotate(45deg);
-    animation: scrollBounce 1.4s ease-in-out infinite;
+    animation: scrollBounce 1.2s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px var(--pixel-accent));
 }
 
 @keyframes scrollBounce {
     0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 1; }
-    50% { transform: rotate(45deg) translate(4px, 4px); opacity: 0.4; }
+    50% { transform: rotate(45deg) translate(6px, 6px); opacity: 0.5; }
 }
 
 /* ============== Skills Page (Pixel Sphere) ============== */
@@ -591,6 +632,43 @@ body {
     line-height: 1.7;
     margin-top: 8px;
     letter-spacing: 0.03em;
+}
+
+.timeline-subtitle {
+    font-family: var(--pixel);
+    font-size: 0.65rem;
+    color: #0d0d1a;
+    letter-spacing: 0.15em;
+    margin: 30px 0 10px;
+    padding: 8px 12px;
+    position: relative;
+    z-index: 3;
+    background: #ffff00;
+    border: 2px solid #ffff00;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.subtitle-zh {
+    font-family: var(--card);
+    font-size: 0.75rem;
+    color: #0d0d1a;
+    letter-spacing: 0.05em;
+}
+
+.section-sub-zh {
+    display: block;
+    font-family: var(--card);
+    font-size: 0.75rem;
+    color: #ffff00;
+    text-align: center;
+    letter-spacing: 0.1em;
+    margin-top: -30px;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
 }
 
 /* ============== Arcade Reveal ============== */
