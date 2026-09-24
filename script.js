@@ -205,15 +205,18 @@
         { text: 'PyTorch',     color: '#ff00cc' },
         { text: 'LlamaIndex',  color: '#00ffcc' },
         { text: 'Embedding',   color: '#f94144' },
-        { text: 'Codex',       color: '#7fff00' },
-        { text: 'Node.js',     color: '#ff4400' },
+        { text: 'LangGraph',   color: '#7fff00' },
+        { text: 'FastAPI',     color: '#00cc66' },
+        { text: 'Next.js',     color: '#ff4400' },
+        { text: 'Docker',      color: '#0099ff' },
+        { text: 'PostgreSQL',  color: '#3366cc' },
+        { text: 'Redis',       color: '#ff3333' },
+        { text: 'TypeScript',  color: '#007acc' },
+        { text: 'RAG',         color: '#e6e600' },
+        { text: 'Node.js',     color: '#ff8844' },
         { text: 'C++',         color: '#0088ff' },
         { text: 'C#',          color: '#4488ff' },
-        { text: 'Git',         color: '#9900ff' },
-        { text: 'PyCharm',     color: '#e63946' },
-        { text: 'MySQL',       color: '#ff006e' },
-        { text: 'Trae',        color: '#cc00ff' },
-        { text: 'AIGC',        color: '#00eaff' }
+        { text: 'Git',         color: '#9900ff' }
     ];
 
     var sphereDots = [];
