@@ -151,10 +151,10 @@
         var welcome = document.getElementById('welcome-screen');
         welcome.classList.add('show');
 
-        await sleep(1800);
+        await sleep(2800);
         welcome.classList.add('fade-out');
 
-        await sleep(800);
+        await sleep(1200);
         welcome.style.display = 'none';
         initStarfield();
         initComet();
@@ -441,8 +441,8 @@
                 sphereVelY *= 0.9;
                 sphereVelX *= 0.9;
             } else if (sphereAutoSpin) {
-                sphereRotY += 0.00386;
-                sphereRotX += 0.00104;
+                sphereRotY += 0.0021;
+                sphereRotX += 0.0006;
             }
         }
         drawSphere();
@@ -742,7 +742,7 @@
        Comet Cursor Trail
        ================================================================ */
     var trail = [];
-    var TRAIL_LENGTH = 24;
+    var TRAIL_LENGTH = 32;
     var cometChars = ['✦', '✧', '*', '·', '.', ' '];
     var cometCharsLen = cometChars.length;
     var cometX = 0, cometY = 0;
@@ -764,11 +764,11 @@
 
     function renderComet() {
         for (var i = trail.length - 1; i > 0; i--) {
-            trail[i].x += (trail[i - 1].x - trail[i].x) * 0.6;
-            trail[i].y += (trail[i - 1].y - trail[i].y) * 0.6;
+            trail[i].x += (trail[i - 1].x - trail[i].x) * 0.35;
+            trail[i].y += (trail[i - 1].y - trail[i].y) * 0.35;
         }
-        trail[0].x += (cometX - trail[0].x) * 0.8;
-        trail[0].y += (cometY - trail[0].y) * 0.8;
+        trail[0].x += (cometX - trail[0].x) * 0.45;
+        trail[0].y += (cometY - trail[0].y) * 0.45;
 
         for (var j = 0; j < trail.length; j++) {
             var t = trail[j];
