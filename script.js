@@ -79,7 +79,8 @@
     var currentLine = 0;
     var currentToken = 0;
     var currentChar = 0;
-    var typingSpeed = 1;
+    // 每字符间隔(ms)。浏览器会把嵌套 setTimeout 钳到最低 ~4ms，写更小的值不会更快
+    var typingSpeed = 6;
     var currentLineEl = null;
     var currentSpan = null;
 
