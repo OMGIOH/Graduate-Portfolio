@@ -26,7 +26,7 @@
         apiKey: '',
         enabled: true,       // 上线开关
         knowledgeUrl: 'knowledge.json',
-        topK: 4,
+        topK: 6,
         maxQuestions: 20,
         maxTokens: 800
     };

@@ -66,7 +66,7 @@ def main():
         dot = sum(a * b for a, b in zip(qv, cv))
         scored.append((dot / (norm(cv) * qn), chunk))
     scored.sort(key=lambda item: -item[0])
-    hits = [chunk for _, chunk in scored[:4]]
+    hits = [chunk for _, chunk in scored[:6]]
     context = "\n\n".join("[%d] %s" % (i + 1, c["text"]) for i, c in enumerate(hits)) \
         or "（未检索到明显相关的资料）"
 
