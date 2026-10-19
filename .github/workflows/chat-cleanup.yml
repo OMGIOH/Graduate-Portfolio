@@ -1,0 +1,33 @@
+name: chat-cleanup
+
+# 无痕清理：chat-relay 每次运行结束后立即触发本工作流，
+# 删除 chat-relay 的所有运行记录（含刚结束的那条，附问题参数与日志），
+# 并删除本工作流自己以往的历史运行——Actions 页面最多只余 1 条无内容的清理记录。
+# （运行中的运行不可被删除，GitHub 返回 403，故采用"结束后由另一工作流清理"的方式）
+
+on:
+  workflow_run:
+    workflows: ["chat-relay"]
+    types: [completed]
+  workflow_dispatch:   # 手动兜底
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete chat-relay runs (all completed)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for wf in chat-relay.yml chat-cleanup.yml; do
+            gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${wf}/runs?per_page=100" \
+              --jq ".workflow_runs[] | select(.id != ${GITHUB_RUN_ID}) | .id" 2>/dev/null | \
+            while read -r id; do
+              gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/runs/${id}" >/dev/null 2>&1 || true
+            done
+          done
+          echo "cleanup done"
