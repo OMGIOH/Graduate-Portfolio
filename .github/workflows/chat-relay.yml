@@ -45,17 +45,18 @@ jobs:
           # 从输出中提取 answer（===ANSWER_START=== 和 ===ANSWER_END=== 之间）
           ANSWER=$(sed -n '/^===ANSWER_START===/,/===ANSWER_END===/p' /tmp/nim_output.txt | sed '1d;$d')
           if [ -n "$ANSWER" ]; then
-            # 使用 printf 避免 YAML 特殊字符问题
-            {
-              printf '## 问答记录\n'
-              printf '**问题 ID**: %s\n' "${{ inputs.id }}"
-              printf '**问题**: %s\n' "${{ inputs.question }}"
-              printf '**语言**: %s\n' "${{ inputs.lang }}"
-              printf '**时间**: %s\n\n' "$(date -u '+%Y-%m-%d %H:%M:%S')"
-              printf '### 回答\n'
-              printf '%s\n' "$ANSWER"
-              printf '---\n'
-            } >> "$GITHUB_STEP_SUMMARY"
+            # 使用 cat 和 heredoc 避免 printf 选项问题
+            cat <<EOF >> "$GITHUB_STEP_SUMMARY"
+## 问答记录
+**问题 ID**: ${{ inputs.id }}
+**问题**: ${{ inputs.question }}
+**语言**: ${{ inputs.lang }}
+**时间**: $(date -u '+%Y-%m-%d %H:%M:%S')
+
+### 回答
+$ANSWER
+---
+EOF
           else
             echo "Warning: No answer extracted" >&2
           fi
