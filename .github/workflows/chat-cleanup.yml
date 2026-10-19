@@ -10,6 +10,8 @@ on:
     workflows: ["chat-relay"]
     types: [completed]
   workflow_dispatch:   # 手动兜底
+  schedule:
+    - cron: '17 * * * *'   # 每小时兜底清理（防 workflow_run 事件丢失）
 
 permissions:
   actions: write
