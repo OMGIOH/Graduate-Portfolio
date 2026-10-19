@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""GitHub Actions 答题脚本：读知识库 → 向量检索 → 调 NVIDIA NIM → 写入 Job Summary（90 天自动过期，不落仓库文件）
+"""GitHub Actions 答题脚本：读知识库 → 混合检索 → 调 NVIDIA NIM → 输出 answer payload。
 
-由 .github/workflows/chat-relay.yml 调用。
 环境变量：
     NVIDIA_API_KEY  NIM 密钥（仓库 Secrets）
     QUESTION_ID     问题 ID（前端生成，用于关联前后端）
     QUESTION        访客问题
     LANG            zh | en
+
+用法：
+    python3 tools/relay_answer.py --out /tmp/payload.json   # CI：写 {id, answer, ts}，不打印答案正文
+    python3 tools/relay_answer.py                            # 本地调试：打印答案
 """
 
 import argparse
@@ -15,7 +18,6 @@ import json
 import os
 import re
 import struct
-import sys
 import time
 import urllib.request
 
@@ -67,7 +69,7 @@ def tokenize(text):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--summary", action="store_true", help="输出格式化供 Job Summary 使用")
+    parser.add_argument("--out", help="把 {id, answer, ts} 写入该路径（CI 模式）")
     args = parser.parse_args()
 
     kb = json.load(open("knowledge.json", encoding="utf-8"))
@@ -123,26 +125,16 @@ def main():
         "max_tokens": 800,
     })
     answer = resp["choices"][0]["message"]["content"].strip()
-    
-    # 输出答案（供 shell 提取）
-    if args.summary:
-        # 输出格式：answer: <answer>，每行不超过 80 字符，便于 shell 提取
-        # 使用特殊标记分隔
+
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as fh:
+            json.dump({"id": QID, "answer": answer, "ts": int(time.time())}, fh, ensure_ascii=False)
+        print("payload written: %s (%d chars)" % (args.out, len(answer)))
+    else:
         print("===ANSWER_START===")
         print(answer)
         print("===ANSWER_END===")
-    else:
-        # 兼容旧模式：落盘
-        outdir = pathlib.Path("answers")
-        outdir.mkdir(exist_ok=True)
-        (outdir / (QID + ".json")).write_text(
-            json.dumps({"id": QID, "question": QUESTION, "answer": answer, "ts": int(time.time())},
-                       ensure_ascii=False),
-            encoding="utf-8",
-        )
-        print("written answers/%s.json" % QID)
 
 
 if __name__ == "__main__":
-    import pathlib
     main()
