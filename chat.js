@@ -9,13 +9,15 @@
     /* ===== 配置（接入 API 时只改这里） ===== */
     var CONFIG = {
         // 当前方案：GitHub Actions 中转。访客问题 → 点火仓库 workflow →
-        // GitHub 服务器端读知识库、调 NVIDIA NIM → 答案写到 chat-answers 分支 → 前端轮询渐显。
+        // GitHub 服务器端读知识库、调 NVIDIA NIM → 答案写入 answers 分支的单文件
+        // latest.json（每次覆盖，不留历史）→ 前端按 id 匹配轮询、打字机渐显。
         // NIM 密钥存放在仓库 Secrets（NVIDIA_API_KEY），不在本文件。
         relay: {
             enabled: true,
             repo: 'OMGIOH/Graduate-Portfolio',
             workflow: 'chat-relay.yml',
-            branch: 'chat-answers',
+            branch: 'answers',
+            file: 'latest.json',
             // 注意：GitHub 推送保护会拦截明文令牌入库，此处按片段拼接（运行时还原）。
             // 该 PAT 权限仅限本仓库（Actions: R/W + Contents: R），泄露最坏情况=被刷 NIM 免费额度，可随时吊销重发。
             pat: 'github' + '_pat_' + '11BNXWESY0lNWk2PfV1K7c' + '_MTmSqIiZBGkNo99GWa8Of' + '7UbAZOcwgGIxiHUHMhia2x3HJ7FSGJBxOujxpZ'
@@ -375,83 +377,45 @@
             body: JSON.stringify({ ref: 'main', inputs: { id: id, question: question, lang: lang() } })
         }).then(function (resp) {
             if (resp.status !== 204) throw new Error('dispatch ' + resp.status);
-            // workflow_dispatch 返回 204 但不返回 run_id，需要轮询 runs 列表找到最新的
-            setTimeout(function () { pollRunId(id, 0, question, bubble, cursor); }, 2000);
+            pollAnswerFile(id, 0, question, bubble, cursor);
         }).catch(function () {
             finishRelay(bubble, cursor, t().relayFail);
         });
     }
 
-    function pollRunId(id, attempt, question, bubble, cursor) {
-        if (attempt > 10) { finishRelay(bubble, cursor, t().relayFail); return; }
-        fetch('https://api.github.com/repos/' + CONFIG.relay.repo + '/actions/workflows/'
-              + CONFIG.relay.workflow + '/runs?per_page=5', { headers: ghHeaders() })
-            .then(function (resp) { return resp.json(); })
-            .then(function (data) {
-                var run = data.workflow_runs.find(function (r) {
-                    return r.head_branch === 'main' &&
-                           r.event === 'workflow_dispatch' &&
-                           r.run_started_at > new Date(Date.now() - 60000).toISOString() &&
-                           (r.inputs && r.inputs.id === id);
-                });
-                if (run) {
-                    pollSummary(run.id, 0, bubble, cursor);
-                } else if (attempt < 10) {
-                    setTimeout(function () { pollRunId(id, attempt + 1, bubble, cursor); }, 2000);
-                } else {
-                    finishRelay(bubble, cursor, t().relayFail);
-                }
-            })
-            .catch(function () {
-                if (attempt < 10) {
-                    setTimeout(function () { pollRunId(id, attempt + 1, bubble, cursor); }, 2000);
-                } else {
-                    finishRelay(bubble, cursor, t().relayFail);
-                }
-            });
-    }
-
-    function pollSummary(runId, attempt, bubble, cursor) {
+    // 轮询 answers 分支的 latest.json（单文件、每次覆盖、无历史），按 id 匹配本问题
+    function pollAnswerFile(id, attempt, question, bubble, cursor) {
         if (attempt > 30) { finishRelay(bubble, cursor, t().relayTimeout); return; }
-        if (!open) return;
-        fetch('https://api.github.com/repos/' + CONFIG.relay.repo + '/actions/runs/'
-              + runId + '/summary', { headers: ghHeaders() })
+        if (!open) return;   // 面板已关闭，停止轮询
+        fetch('https://api.github.com/repos/' + CONFIG.relay.repo + '/contents/'
+              + CONFIG.relay.file + '?ref=' + CONFIG.relay.branch + '&t=' + Date.now(),
+              { headers: ghHeaders() })
             .then(function (resp) {
-                if (!resp.ok) {
-                    if (attempt < 30) setTimeout(function () { pollSummary(runId, attempt + 1, bubble, cursor); }, 3000);
-                    else finishRelay(bubble, cursor, t().relayFail);
-                    return;
-                }
-                return resp.text();
+                if (resp.status === 200) return resp.json();
+                if (resp.status === 404) return null;   // 分支/文件尚未创建
+                throw new Error('poll ' + resp.status);
             })
-            .then(function (md) {
-                if (!md) { return; }
-                // 从 markdown 中提取回答（格式：## 回答\n\n{answer}\n---）
-                var match = md.match(/## 回答\n\n([\s\S]*?)\n---/);
-                var answer = match ? match[1].trim() : '';
-                if (answer) {
-                    finishRelayWithTypeOut(bubble, cursor, answer);
-                } else if (attempt < 30) {
-                    setTimeout(function () { pollSummary(runId, attempt + 1, bubble, cursor); }, 3000);
+            .then(function (data) {
+                var payload = null;
+                if (data) {
+                    try { payload = JSON.parse(b64ToUtf8(data.content)); } catch (e) { /* ignore */ }
+                }
+                if (payload && payload.id === id && payload.answer) {
+                    bubble.textContent = '';
+                    bubble.appendChild(cursor);
+                    typeOut(bubble, payload.answer, cursor);
+                    history.push({ role: 'user', content: question });
+                    history.push({ role: 'assistant', content: payload.answer });
+                    busy = false;
+                    sendBtn.disabled = false;
                 } else {
-                    finishRelay(bubble, cursor, t().relayFail);
+                    // 文件还是上一个问题的答案（或尚未生成），继续等
+                    setTimeout(function () { pollAnswerFile(id, attempt + 1, question, bubble, cursor); }, 3500);
                 }
             })
             .catch(function () {
-                if (attempt < 30) setTimeout(function () { pollSummary(runId, attempt + 1, bubble, cursor); }, 3000);
-                else finishRelay(bubble, cursor, t().relayFail);
+                finishRelay(bubble, cursor, t().relayFail);
             });
-    }
-
-    function finishRelayWithTypeOut(bubble, cursor, text) {
-        if (cursor) cursor.remove();
-        bubble.classList.remove('streaming');
-        bubble.textContent = '';
-        bubble.appendChild(cursor);
-        typeOut(bubble, text, cursor);
-        history.push({ role: 'user', content: '' }); // 这里没有 question，但可以从上下文获取
-        busy = false;
-        sendBtn.disabled = false;
     }
 
     function streamChat(question, context, bubble, cursor) {
