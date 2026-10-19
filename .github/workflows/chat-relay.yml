@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       id:
-        description: '问题 ID（前端生成，用于关联前后端）'
+        description: '问题 ID（前端生成）'
         required: true
       question:
         description: '访客问题'
@@ -15,7 +15,7 @@ on:
         default: 'zh'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: chat-relay
@@ -30,33 +30,24 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Generate answer (NIM)
-        id: generate
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           QUESTION_ID: ${{ inputs.id }}
           QUESTION: ${{ inputs.question }}
           LANG: ${{ inputs.lang }}
-        run: |
-          python3 tools/relay_answer.py --summary 2>&1 | tee /tmp/nim_output.txt
+        run: python3 tools/relay_answer.py --out /tmp/answer_payload.json
 
-      - name: Extract answer and write Job Summary
-        if: always()
+      - name: Publish answer (single-file orphan branch, overwrite)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 从输出中提取 answer（===ANSWER_START=== 和 ===ANSWER_END=== 之间）
-          ANSWER=$(sed -n '/^===ANSWER_START===/,/===ANSWER_END===/p' /tmp/nim_output.txt | sed '1d;$d')
-          if [ -n "$ANSWER" ]; then
-            # 使用 cat 和 heredoc 避免 printf 选项问题
-            cat <<EOF >> "$GITHUB_STEP_SUMMARY"
-## 问答记录
-**问题 ID**: ${{ inputs.id }}
-**问题**: ${{ inputs.question }}
-**语言**: ${{ inputs.lang }}
-**时间**: $(date -u '+%Y-%m-%d %H:%M:%S')
-
-### 回答
-$ANSWER
----
-EOF
-          else
-            echo "Warning: No answer extracted" >&2
-          fi
+          set -e
+          WORK=$(mktemp -d)
+          cd "$WORK"
+          git init -q -b answers
+          git config user.name "chat-relay"
+          git config user.email "chat-relay@users.noreply.github.com"
+          cp /tmp/answer_payload.json latest.json
+          git add latest.json
+          git commit -qm "answer"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" answers
