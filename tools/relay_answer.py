@@ -13,6 +13,7 @@ import base64
 import json
 import os
 import pathlib
+import re
 import struct
 import sys
 import time
@@ -54,17 +55,40 @@ def norm(vec):
     return sum(x * x for x in vec) ** 0.5 or 1
 
 
+def tokenize(text):
+    """CJK 二字串 + ASCII 词元（关键词信号）。"""
+    tokens = re.findall(r"[a-z0-9]+", text.lower())
+    cjk = re.findall(r"[\u4e00-\u9fff]", text)
+    tokens.extend(a + b for a, b in zip(cjk, cjk[1:]))
+    if len(cjk) == 1:
+        tokens.append(cjk[0])
+    return tokens
+
+
 def main():
     kb = json.load(open("knowledge.json", encoding="utf-8"))
 
-    # 1) 检索：问题向量化 + 余弦 top-4
+    # 1) 混合检索：向量分（min-max 归一）+ 关键词重合度加权。
+    #    nemotron 向量的区分度较平（top 分差 <0.02），关键词信号用于纠偏。
     qv = nim_post("/embeddings", {"model": EMBED_MODEL, "input": [QUESTION]})["data"][0]["embedding"]
     qn = norm(qv)
-    scored = []
+    q_tokens = set(tokenize(QUESTION))
+
+    raw = []
     for chunk in kb["chunks"]:
         cv = unpack(chunk["embedding"])
         dot = sum(a * b for a, b in zip(qv, cv))
-        scored.append((dot / (norm(cv) * qn), chunk))
+        raw.append((dot / (norm(cv) * qn), chunk))
+
+    lo = min(score for score, _ in raw)
+    hi = max(score for score, _ in raw) or 1
+    scored = []
+    for score, chunk in raw:
+        vnorm = (score - lo) / (hi - lo)
+        tokens = set(tokenize(chunk["text"]))
+        overlap = len(q_tokens & tokens) / (len(q_tokens) ** 0.5 or 1)
+        hybrid = 0.7 * vnorm + 0.3 * min(1.0, overlap)
+        scored.append((hybrid, chunk))
     scored.sort(key=lambda item: -item[0])
     hits = [chunk for _, chunk in scored[:6]]
     context = "\n\n".join("[%d] %s" % (i + 1, c["text"]) for i, c in enumerate(hits)) \
