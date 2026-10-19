@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # 用于运行结束后自删除
 
 concurrency:
   group: chat-relay
@@ -51,3 +52,9 @@ jobs:
           git add latest.json
           git commit -qm "answer"
           git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" answers
+
+      - name: Self-delete this run (no trace)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" || true
