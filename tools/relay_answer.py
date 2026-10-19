@@ -27,7 +27,6 @@ KEY = os.environ["NVIDIA_API_KEY"]
 QID = os.environ["QUESTION_ID"]
 QUESTION = os.environ["QUESTION"]
 LANG = os.environ.get("LANG", "zh")
-SUMMARY_PATH = os.environ.get("GITHUB_STEP_SUMMARY")
 
 
 def nim_post(path, payload):
@@ -66,19 +65,9 @@ def tokenize(text):
     return tokens
 
 
-def write_summary(content):
-    """写入 GitHub Actions Job Summary（90 天自动过期）"""
-    if SUMMARY_PATH:
-        with open(SUMMARY_PATH, "a", encoding="utf-8") as f:
-            f.write(content)
-    else:
-        # 本地调试时打印到 stdout
-        print(content)
-
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--summary", action="store_true", help="写入 GitHub Job Summary 而非文件")
+    parser.add_argument("--summary", action="store_true", help="输出格式化供 Job Summary 使用")
     args = parser.parse_args()
 
     kb = json.load(open("knowledge.json", encoding="utf-8"))
@@ -134,23 +123,16 @@ def main():
         "max_tokens": 800,
     })
     answer = resp["choices"][0]["message"]["content"].strip()
-    print("answer:", answer[:200])
-
-    # 3) 写入 Job Summary（GitHub Actions 会自动归档为 Run Summary，90 天自动过期）
-    md = f"""## 问答记录
-**问题 ID**: {QID}
-**问题**: {QUESTION}
-**语言**: {LANG}
-**时间**: {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}
-
-### 回答
-{answer}
----
-"""
-    write_summary(md)
-
-    if not args.summary:
-        # 兼容旧模式：仍然落盘（向后兼容）
+    
+    # 输出答案（供 shell 提取）
+    if args.summary:
+        # 输出格式：answer: <answer>，每行不超过 80 字符，便于 shell 提取
+        # 使用特殊标记分隔
+        print("===ANSWER_START===")
+        print(answer)
+        print("===ANSWER_END===")
+    else:
+        # 兼容旧模式：落盘
         outdir = pathlib.Path("answers")
         outdir.mkdir(exist_ok=True)
         (outdir / (QID + ".json")).write_text(

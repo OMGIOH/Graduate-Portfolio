@@ -1,9 +1,5 @@
 name: chat-relay
 
-# 作品集 AI 客服中转：由网页调用 GitHub API 点火，在 GitHub 服务器上
-# 读知识库 → 向量检索 → 调 NVIDIA NIM 生成回答 → 写入 Job Summary（90 天自动过期，不落仓库文件）
-# 前端轮询 Run Summary 拿结果。
-
 on:
   workflow_dispatch:
     inputs:
@@ -19,7 +15,7 @@ on:
         default: 'zh'
 
 permissions:
-  contents: read   # 只需读 knowledge.json
+  contents: read
 
 concurrency:
   group: chat-relay
@@ -33,10 +29,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Generate answer (NIM) and write to Job Summary
+      - name: Generate answer (NIM)
+        id: generate
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           QUESTION_ID: ${{ inputs.id }}
           QUESTION: ${{ inputs.question }}
           LANG: ${{ inputs.lang }}
-        run: python3 tools/relay_answer.py --summary
+        run: |
+          python3 tools/relay_answer.py --summary 2>&1 | tee /tmp/nim_output.txt
+
+      - name: Extract answer and write Job Summary
+        if: always()
+        run: |
+          # 从输出中提取 answer（===ANSWER_START=== 和 ===ANSWER_END=== 之间）
+          ANSWER=$(sed -n '/^===ANSWER_START===/,/===ANSWER_END===/p' /tmp/nim_output.txt | sed '1d;$d')
+          if [ -n "$ANSWER" ]; then
+            cat <<EOF >> "$GITHUB_STEP_SUMMARY"
+## 问答记录
+**问题 ID**: ${{ inputs.id }}
+**问题**: ${{ inputs.question }}
+**语言**: ${{ inputs.lang }}
+**时间**: $(date -u '+%Y-%m-%d %H:%M:%S')
+
+### 回答
+$ANSWER
+---
+EOF
+          else
+            echo "Warning: No answer extracted" >&2
+          fi
