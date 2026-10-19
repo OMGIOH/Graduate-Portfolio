@@ -375,40 +375,83 @@
             body: JSON.stringify({ ref: 'main', inputs: { id: id, question: question, lang: lang() } })
         }).then(function (resp) {
             if (resp.status !== 204) throw new Error('dispatch ' + resp.status);
-            pollAnswer(id, 0, question, bubble, cursor);
+            // workflow_dispatch 返回 204 但不返回 run_id，需要轮询 runs 列表找到最新的
+            setTimeout(function () { pollRunId(id, 0, question, bubble, cursor); }, 2000);
         }).catch(function () {
             finishRelay(bubble, cursor, t().relayFail);
         });
     }
 
-    function pollAnswer(id, attempt, question, bubble, cursor) {
-        if (attempt > 35) { finishRelay(bubble, cursor, t().relayTimeout); return; }
-        if (!open) return;   // 面板已关闭，停止轮询
-        fetch('https://api.github.com/repos/' + CONFIG.relay.repo + '/contents/answers/'
-              + id + '.json?ref=' + CONFIG.relay.branch, { headers: ghHeaders() })
-            .then(function (resp) {
-                if (resp.status === 200) return resp.json();
-                if (resp.status === 404) return null;
-                throw new Error('poll ' + resp.status);
-            })
+    function pollRunId(id, attempt, question, bubble, cursor) {
+        if (attempt > 10) { finishRelay(bubble, cursor, t().relayFail); return; }
+        fetch('https://api.github.com/repos/' + CONFIG.relay.repo + '/actions/workflows/'
+              + CONFIG.relay.workflow + '/runs?per_page=5', { headers: ghHeaders() })
+            .then(function (resp) { return resp.json(); })
             .then(function (data) {
-                if (!data) {
-                    setTimeout(function () { pollAnswer(id, attempt + 1, question, bubble, cursor); }, 4000);
-                    return;
+                var run = data.workflow_runs.find(function (r) {
+                    return r.head_branch === 'main' &&
+                           r.event === 'workflow_dispatch' &&
+                           r.run_started_at > new Date(Date.now() - 60000).toISOString() &&
+                           (r.inputs && r.inputs.id === id);
+                });
+                if (run) {
+                    pollSummary(run.id, 0, bubble, cursor);
+                } else if (attempt < 10) {
+                    setTimeout(function () { pollRunId(id, attempt + 1, bubble, cursor); }, 2000);
+                } else {
+                    finishRelay(bubble, cursor, t().relayFail);
                 }
-                var answer = '';
-                try { answer = JSON.parse(b64ToUtf8(data.content)).answer || ''; } catch (e) { /* ignore */ }
-                bubble.textContent = '';
-                bubble.appendChild(cursor);
-                typeOut(bubble, answer || t().error, cursor);
-                history.push({ role: 'user', content: question });
-                history.push({ role: 'assistant', content: answer });
-                busy = false;
-                sendBtn.disabled = false;
             })
             .catch(function () {
-                finishRelay(bubble, cursor, t().relayFail);
+                if (attempt < 10) {
+                    setTimeout(function () { pollRunId(id, attempt + 1, bubble, cursor); }, 2000);
+                } else {
+                    finishRelay(bubble, cursor, t().relayFail);
+                }
             });
+    }
+
+    function pollSummary(runId, attempt, bubble, cursor) {
+        if (attempt > 30) { finishRelay(bubble, cursor, t().relayTimeout); return; }
+        if (!open) return;
+        fetch('https://api.github.com/repos/' + CONFIG.relay.repo + '/actions/runs/'
+              + runId + '/summary', { headers: ghHeaders() })
+            .then(function (resp) {
+                if (!resp.ok) {
+                    if (attempt < 30) setTimeout(function () { pollSummary(runId, attempt + 1, bubble, cursor); }, 3000);
+                    else finishRelay(bubble, cursor, t().relayFail);
+                    return;
+                }
+                return resp.text();
+            })
+            .then(function (md) {
+                if (!md) { return; }
+                // 从 markdown 中提取回答（格式：## 回答\n\n{answer}\n---）
+                var match = md.match(/## 回答\n\n([\s\S]*?)\n---/);
+                var answer = match ? match[1].trim() : '';
+                if (answer) {
+                    finishRelayWithTypeOut(bubble, cursor, answer);
+                } else if (attempt < 30) {
+                    setTimeout(function () { pollSummary(runId, attempt + 1, bubble, cursor); }, 3000);
+                } else {
+                    finishRelay(bubble, cursor, t().relayFail);
+                }
+            })
+            .catch(function () {
+                if (attempt < 30) setTimeout(function () { pollSummary(runId, attempt + 1, bubble, cursor); }, 3000);
+                else finishRelay(bubble, cursor, t().relayFail);
+            });
+    }
+
+    function finishRelayWithTypeOut(bubble, cursor, text) {
+        if (cursor) cursor.remove();
+        bubble.classList.remove('streaming');
+        bubble.textContent = '';
+        bubble.appendChild(cursor);
+        typeOut(bubble, text, cursor);
+        history.push({ role: 'user', content: '' }); // 这里没有 question，但可以从上下文获取
+        busy = false;
+        sendBtn.disabled = false;
     }
 
     function streamChat(question, context, bubble, cursor) {

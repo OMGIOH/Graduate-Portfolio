@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""GitHub Actions 答题脚本：读知识库 → 向量检索 → 调 NVIDIA NIM → 写出 answers/<id>.json
+"""GitHub Actions 答题脚本：读知识库 → 向量检索 → 调 NVIDIA NIM → 写入 Job Summary（90 天自动过期，不落仓库文件）
 
 由 .github/workflows/chat-relay.yml 调用。
 环境变量：
     NVIDIA_API_KEY  NIM 密钥（仓库 Secrets）
-    QUESTION_ID     问题 ID（前端生成，用于轮询文件名）
+    QUESTION_ID     问题 ID（前端生成，用于关联前后端）
     QUESTION        访客问题
     LANG            zh | en
 """
 
+import argparse
 import base64
 import json
 import os
-import pathlib
 import re
 import struct
 import sys
@@ -27,6 +27,7 @@ KEY = os.environ["NVIDIA_API_KEY"]
 QID = os.environ["QUESTION_ID"]
 QUESTION = os.environ["QUESTION"]
 LANG = os.environ.get("LANG", "zh")
+SUMMARY_PATH = os.environ.get("GITHUB_STEP_SUMMARY")
 
 
 def nim_post(path, payload):
@@ -65,11 +66,24 @@ def tokenize(text):
     return tokens
 
 
+def write_summary(content):
+    """写入 GitHub Actions Job Summary（90 天自动过期）"""
+    if SUMMARY_PATH:
+        with open(SUMMARY_PATH, "a", encoding="utf-8") as f:
+            f.write(content)
+    else:
+        # 本地调试时打印到 stdout
+        print(content)
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--summary", action="store_true", help="写入 GitHub Job Summary 而非文件")
+    args = parser.parse_args()
+
     kb = json.load(open("knowledge.json", encoding="utf-8"))
 
-    # 1) 混合检索：向量分（min-max 归一）+ 关键词重合度加权。
-    #    nemotron 向量的区分度较平（top 分差 <0.02），关键词信号用于纠偏。
+    # 1) 混合检索：向量分（min-max 归一）+ 关键词重合度加权
     qv = nim_post("/embeddings", {"model": EMBED_MODEL, "input": [QUESTION]})["data"][0]["embedding"]
     qn = norm(qv)
     q_tokens = set(tokenize(QUESTION))
@@ -122,16 +136,31 @@ def main():
     answer = resp["choices"][0]["message"]["content"].strip()
     print("answer:", answer[:200])
 
-    # 3) 落盘
-    outdir = pathlib.Path("answers")
-    outdir.mkdir(exist_ok=True)
-    (outdir / (QID + ".json")).write_text(
-        json.dumps({"id": QID, "question": QUESTION, "answer": answer, "ts": int(time.time())},
-                   ensure_ascii=False),
-        encoding="utf-8",
-    )
-    print("written answers/%s.json" % QID)
+    # 3) 写入 Job Summary（GitHub Actions 会自动归档为 Run Summary，90 天自动过期）
+    md = f"""## 问答记录
+**问题 ID**: {QID}
+**问题**: {QUESTION}
+**语言**: {LANG}
+**时间**: {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}
+
+### 回答
+{answer}
+---
+"""
+    write_summary(md)
+
+    if not args.summary:
+        # 兼容旧模式：仍然落盘（向后兼容）
+        outdir = pathlib.Path("answers")
+        outdir.mkdir(exist_ok=True)
+        (outdir / (QID + ".json")).write_text(
+            json.dumps({"id": QID, "question": QUESTION, "answer": answer, "ts": int(time.time())},
+                       ensure_ascii=False),
+            encoding="utf-8",
+        )
+        print("written answers/%s.json" % QID)
 
 
 if __name__ == "__main__":
+    import pathlib
     main()

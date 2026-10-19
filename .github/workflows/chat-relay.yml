@@ -1,14 +1,14 @@
 name: chat-relay
 
 # 作品集 AI 客服中转：由网页调用 GitHub API 点火，在 GitHub 服务器上
-# 读知识库 → 向量检索 → 调 NVIDIA NIM 生成回答 → 写到 chat-answers 分支。
-# 前端轮询 answers/<id>.json 拿结果。
+# 读知识库 → 向量检索 → 调 NVIDIA NIM 生成回答 → 写入 Job Summary（90 天自动过期，不落仓库文件）
+# 前端轮询 Run Summary 拿结果。
 
 on:
   workflow_dispatch:
     inputs:
       id:
-        description: '问题 ID（前端生成，作为答案文件名）'
+        description: '问题 ID（前端生成，用于关联前后端）'
         required: true
       question:
         description: '访客问题'
@@ -19,9 +19,8 @@ on:
         default: 'zh'
 
 permissions:
-  contents: write
+  contents: read   # 只需读 knowledge.json
 
-# 串行执行，避免并发写分支冲突
 concurrency:
   group: chat-relay
   cancel-in-progress: false
@@ -34,25 +33,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Generate answer (NIM)
+      - name: Generate answer (NIM) and write to Job Summary
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           QUESTION_ID: ${{ inputs.id }}
           QUESTION: ${{ inputs.question }}
           LANG: ${{ inputs.lang }}
-        run: python3 tools/relay_answer.py
-
-      - name: Publish answer to chat-answers branch
-        run: |
-          set -e
-          git config user.name "chat-relay-bot"
-          git config user.email "chat-relay-bot@users.noreply.github.com"
-          if git fetch origin chat-answers 2>/dev/null; then
-            git checkout -B chat-answers origin/chat-answers
-          else
-            git checkout --orphan chat-answers
-          fi
-          # answers/ 是未跟踪文件，checkout 后仍在工作区
-          git add -f answers
-          git commit -m "answer: ${{ inputs.id }}" || echo "nothing to commit"
-          git push -f origin chat-answers
+        run: python3 tools/relay_answer.py --summary
