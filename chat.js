@@ -275,16 +275,19 @@
         var question = (preset || input.value).trim();
         if (!question || busy) return;
         if (questionCount >= CONFIG.maxQuestions) { addBotMessage(t().limit); return; }
+
+        var useRelay = CONFIG.relay.enabled && CONFIG.relay.pat;
+        if (CONFIG.enabled && isWired() && !useRelay && !kb) { addBotMessage(t().loading); ensureKB(); return; }
+
+        input.value = '';
+        addUserMessage(question);
+
+        // 未接线：正常显示提问，客服回复"接入中"（一眼看懂的状态提示）
         if (!CONFIG.enabled || !isWired()) {
             addBotMessage(lang() === 'zh' ? 'AI 客服正在接入中，敬请期待。' : 'The AI assistant is being wired up — stay tuned.');
             return;
         }
 
-        var useRelay = CONFIG.relay.enabled && CONFIG.relay.pat;
-        if (!useRelay && !kb) { addBotMessage(t().loading); ensureKB(); return; }
-
-        input.value = '';
-        addUserMessage(question);
         questionCount++;
         renderChips();
         busy = true;
