@@ -1,7 +1,10 @@
 /* ============================================================
    OH.CHAT.EXE — 作品集 AI 客服
-   架构：静态知识库(knowledge.json) + 浏览器端余弦检索
-         + SiliconFlow bge-m3 向量化 + 小模型流式回答
+   线上架构：GitHub Actions 中转——chat.js 点火 chat-relay.yml，
+   GitHub 端跑 tools/relay_answer.py（混合检索 + NVIDIA NIM 生成），
+   答案写入 answers 分支单文件 latest.json，前端轮询 + 打字机渐显。
+   下方 CONFIG.baseUrl / chatModel / embedModel 是备选的"浏览器直连"模式，
+   当前未启用（NIM 有 CORS 白名单，浏览器直连不通），保留待接开放 CORS 的服务。
    ============================================================ */
 (function () {
     'use strict';
@@ -31,6 +34,10 @@
         enabled: true,       // 上线开关
         knowledgeUrl: 'knowledge.json',
         topK: 6,
+        // 向量检索的余弦相似度下限（兜底过滤，仅直连模式用到）。
+        // 注意：这套嵌入模型的相似度分布很集中——实测知识块两两已在 0.80~0.94，
+        // 阈值设高会把相关块一起滤掉，因此取低值，只挡明显不相关的提问。
+        minScore: 0.25,
         maxQuestions: 20,
         maxTokens: 800
     };
