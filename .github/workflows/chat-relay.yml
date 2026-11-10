@@ -29,9 +29,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Generate answer (NIM)
+      - name: Generate answer (NVIDIA NIM)
         env:
-          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          # ↓ 换供应商/模型时只改这三行；key 放仓库 Secrets（沿用原有 NVIDIA_API_KEY）
+          CHAT_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          CHAT_BASE_URL: https://integrate.api.nvidia.com/v1
+          CHAT_MODELS: nvidia/nemotron-3.5-bolt-e4b
           QUESTION_ID: ${{ inputs.id }}
           QUESTION: ${{ inputs.question }}
           LANG: ${{ inputs.lang }}
