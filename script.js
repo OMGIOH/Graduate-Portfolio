@@ -8,8 +8,8 @@
        ================================================================ */
     var terminal = document.getElementById('terminal');
     var lines = [
-        [{ t: '// Oliver Huang — Graduate Portfolio', c: 'syn-comment' }],
-        [{ t: '// (C) 2025 Oliver Huang. All rights reserved.', c: 'syn-comment' }],
+        [{ t: '// Oliver Huang — CV', c: 'syn-comment' }],
+        [{ t: '// (C) 2026 Oliver Huang. All rights reserved.', c: 'syn-comment' }],
         [],
         [
             { t: 'C', c: 'syn-path' },
@@ -19,13 +19,13 @@
             { t: ' ', c: '' },
             { t: 'cd', c: 'syn-cmd' },
             { t: ' ', c: '' },
-            { t: 'Graduate Portfolio', c: 'syn-string' }
+            { t: 'OH-CV', c: 'syn-string' }
         ],
         [
             { t: 'C', c: 'syn-path' },
             { t: ':', c: 'syn-punct' },
             { t: '\\', c: 'syn-punct' },
-            { t: 'Graduate-Portfolio', c: 'syn-path' },
+            { t: 'OH-CV', c: 'syn-path' },
             { t: '>', c: 'syn-punct' },
             { t: ' ', c: '' },
             { t: 'oliver', c: 'syn-func' },
@@ -69,7 +69,7 @@
             { t: 'C', c: 'syn-path' },
             { t: ':', c: 'syn-punct' },
             { t: '\\', c: 'syn-punct' },
-            { t: 'Graduate-Portfolio', c: 'syn-path' },
+            { t: 'OH-CV', c: 'syn-path' },
             { t: '>', c: 'syn-punct' },
             { t: ' ', c: '' },
             { t: '_', c: 'terminal-cursor' }
@@ -555,7 +555,7 @@
             }
         }
 
-        addrPath.textContent = 'C:\\Graduate-Portfolio\\' + currentFile;
+        addrPath.textContent = 'C:\\OH-CV\\' + currentFile;
     }
 
     var addrBarTicking = false;

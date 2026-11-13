@@ -17,7 +17,7 @@
         // NIM 密钥存放在仓库 Secrets（NVIDIA_API_KEY），不在本文件。
         relay: {
             enabled: true,
-            repo: 'OMGIOH/Graduate-Portfolio',
+            repo: 'OMGIOH/OH-CV',
             workflow: 'chat-relay.yml',
             branch: 'answers',
             file: 'latest.json',
